@@ -4,7 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-const userRouter = require('./routes/user_handler');
+const userRouter = require('./routes/user/user_handler');
 
 const app = express();
 app.set('port', process.env.PORT || 4000);

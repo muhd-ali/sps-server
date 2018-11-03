@@ -1,5 +1,5 @@
 const axios = require('axios');
-const utils = require('../utils');
+const dbManager = require('./DBManager').dbManager;
 
 const webAuth = {
   domain: 'https://venom-in-veins.auth0.com',
@@ -23,7 +23,7 @@ class User {
   }
 
   populateFrom(user, isNewUser) {
-    this.info = Object.assign({
+    this.publicInfo = Object.assign({
       'isNewUser': isNewUser,
     }, user);
   }
@@ -50,7 +50,7 @@ class User {
 
   updateData(data) {
     const self = this;
-    return utils.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
+    return dbManager.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
       const users = dbo.collection('users');
       users.updateOne({
         'email_address': self.info.email_address,
@@ -70,7 +70,8 @@ class User {
 
   createOrFetchUserFor(userData) {
     const self = this;
-    return utils.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
+    console.log('dbManager = ', dbManager);
+    return dbManager.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
       const users = dbo.collection('users');
       users.findOne({
         'email_address': userData.email,
@@ -97,16 +98,19 @@ class User {
           self.createOrFetchUserFor(userData)
             .then(() => {
               resolve(self);
+            })
+            .catch(() => {
+              reject();
             });
         })
         .catch(() => {
-          console.log('auth failed');
+          reject();
         });
     });
   }
 }
 
 // exports.User = User;
-exports.createUserFromToken = function (token) {
+exports.createFromToken = function (token) {
   return new User(token).getPromise();
 };

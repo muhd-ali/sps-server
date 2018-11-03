@@ -1,19 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const userModule = require('./User');
+const user = require('../../models/User');
 
 router.get('/info/token=:token', (req, res) => {
   const token = req.params.token;
-  userModule.createUserFromToken(token)
+  user.createFromToken(token)
     .then(user => {
-      res.send(user.info);
+      res.send(user.publicInfo);
+    })
+    .catch(() => {
+      res.sendStatus(401);
     });
 });
 
 router.post('/update/token=:token', (req, res) => {
   const token = req.params.token;
   const data = req.body;
-  userModule.createUserFromToken(token)
+  user.createFromToken(token)
     .then(user => {
       user.updateData(data)
         .then(() => {

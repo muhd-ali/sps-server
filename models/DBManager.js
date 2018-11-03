@@ -10,7 +10,7 @@ class DBManager {
   connectToDBAndRun(useDB) {
     return new Promise((resolve, reject) => {
       MongoClient.connect(
-        url,
+        this.url,
         { useNewUrlParser: true },
         (err, db) => {
           if (err) throw err;

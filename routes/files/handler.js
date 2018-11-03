@@ -7,12 +7,8 @@ router.post('/upload/token=:token', (req, res) => {
   const token = req.params.token;
   user.createFromToken(token)
     .then(user => {
-      console.log('created user');
       const fm = fileManager.createFromUser(user);
-      fm.save(req.files)
-        .then(() => {
-          res.send(202);
-        });
+      fm.save(req, res);
     })
     .catch(() => {
       res.sendStatus(401);

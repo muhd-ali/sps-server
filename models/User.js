@@ -11,15 +11,22 @@ class User {
     this.token = token;
   }
 
-  getAuthPromise() {
-    const axiosReq = axios.create({
-      baseURL: webAuth.domain,
-      headers: {
-        'Authorization': 'Bearer ' + this.token,
-      }
+  authenticateUser() {
+    return new Promise((resolve, reject) => {
+      const axiosReq = axios.create({
+        baseURL: webAuth.domain,
+        headers: {
+          'Authorization': 'Bearer ' + this.token,
+        }
+      });
+      axiosReq.get('/userinfo')
+        .then(response => {
+          resolve(response.data);
+        })
+        .catch(err => {
+          reject(err);
+        });
     });
-
-    return axiosReq.get('/userinfo');
   }
 
   populateFrom(user, isNewUser) {
@@ -70,7 +77,6 @@ class User {
 
   createOrFetchUserFor(userData) {
     const self = this;
-    console.log('dbManager = ', dbManager);
     return dbManager.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
       const users = dbo.collection('users');
       users.findOne({
@@ -92,9 +98,8 @@ class User {
   getPromise() {
     const self = this;
     return new Promise((resolve, reject) => {
-      self.getAuthPromise()
-        .then(authResponse => {
-          const userData = authResponse.data;
+      self.authenticateUser()
+        .then(userData => {
           self.createOrFetchUserFor(userData)
             .then(() => {
               resolve(self);

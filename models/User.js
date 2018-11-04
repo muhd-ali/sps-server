@@ -99,6 +99,25 @@ class User {
     }));
   }
 
+  getList() {
+    const email_address = this.publicInfo.email_address;
+    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
+      const files = dbo.collection('users');
+      files.find({
+        '$and': [
+          {'email_address': { '$ne': email_address }},
+          {'email_address': { '$ne': '' }},
+        ],
+      }).toArray((err, result) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result);
+      });
+    }));
+  }
+
   getPromise() {
     const self = this;
     return new Promise((resolve, reject) => {

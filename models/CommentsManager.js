@@ -29,7 +29,7 @@ class CommentsManager {
           'name': user.publicInfo.name,
         },
         'text': text,
-        'createDate': new Date(),
+        'createDate': new Date(), 
       };
       comments.insertOne(comment, (err, res) => {
         if (err) throw err;

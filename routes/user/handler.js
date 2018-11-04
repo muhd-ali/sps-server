@@ -13,6 +13,20 @@ router.get('/info/token=:token', (req, res) => {
     });
 });
 
+router.get('/all/token=:token', (req, res) => {
+  const token = req.params.token;
+  user.createFromToken(token)
+    .then(user => {
+      user.getList()
+        .then(list => {
+          res.send(list);
+        })
+    })
+    .catch(err => {
+      res.sendStatus(401);
+    });
+});
+
 router.post('/update/token=:token', (req, res) => {
   const token = req.params.token;
   const data = req.body;

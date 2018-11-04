@@ -15,4 +15,35 @@ router.post('/upload/token=:token', (req, res) => {
     });
 });
 
+router.get('/download/id=:fileID/token=:token', (req, res) => {
+  const token = req.params.token;
+  const fileID = req.params.fileID;
+  user.createFromToken(token)
+    .then(user => {
+      const fm = fileManager.createFromUser(user);
+      fm.download(fileID, res);
+    })
+    .catch(() => {
+      res.sendStatus(401);
+    });
+});
+
+router.get('/all/token=:token', (req, res) => {
+  const token = req.params.token;
+  user.createFromToken(token)
+    .then(user => {
+      const fm = fileManager.createFromUser(user);
+      fm.getList()
+        .then(list => {
+          res.send(list);
+        })
+        .catch(() => {
+          res.sendStatus(400);
+        });
+    })
+    .catch(() => {
+      res.sendStatus(401);
+    });
+});
+
 module.exports = router;

@@ -82,6 +82,10 @@ class User {
       users.findOne({
         'email_address': userData.email,
       }, (err, result) => {
+        if (err) {
+          reject(err);
+          return;
+        }
         if (result === null) {
           self.populateNewUserFrom(userData, users)
             .then(() => {

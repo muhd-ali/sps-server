@@ -1,7 +1,8 @@
 const dbManager = require('./DBManager').dbManager;
 const GridFsStorage = require('multer-gridfs-storage');
 const multer = require('multer');
-
+const MongoGridFS = require('mongo-gridfs').MongoGridFS;
+const mongoose = require('mongoose');
 
 class FileManager {
   constructor(user) {
@@ -23,6 +24,7 @@ class FileManager {
           'filename': file.originalname,
           'metadata': {
             'owner': email_address,
+            'comments': [],
           },
         };
       },
@@ -43,6 +45,36 @@ class FileManager {
       }
       res.json({error_code:0, error_desc: null, file_uploaded: true});
     });
+  }
+
+  download(id, res) {
+    mongoose.connect(dbManager.url)
+      .then(() => {
+        const db = mongoose.connection.db;
+        const gfs = new MongoGridFS(db, 'fs');
+        gfs.readFileStream(id).then(item => {
+          item.pipe(res);
+        });
+      })
+      .catch(err => {
+        res.sendStatus(401);
+      });
+  }
+
+  getList() {
+    const email_address = this.user.publicInfo.email_address;
+    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
+      const files = dbo.collection('fs.files');
+      files.find({
+        'metadata.owner': email_address,
+      }).toArray((err, result) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result);
+      });
+    }));
   }
 }
 

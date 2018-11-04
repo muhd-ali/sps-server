@@ -38,4 +38,19 @@ router.get('/all/token=:token', (req, res) => {
     });
 });
 
+router.get('/delete/id=:groupID/token=:token', (req, res) => {
+  const token = req.params.token;
+  const groupID = req.params.groupID;
+  user.createFromToken(token)
+    .then(user => {
+      const gm = groupsManager.createFromUser(user);
+      gm.delete(groupID).then(() => {
+        res.sendStatus(200);
+      });
+    })
+    .catch(() => {
+      res.sendStatus(401);
+    });
+});
+
 module.exports = router;

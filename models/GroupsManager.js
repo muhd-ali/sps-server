@@ -1,4 +1,5 @@
 const dbManager = require('./DBManager').dbManager;
+const ObjectId = require('mongodb').ObjectID;
 
 class GroupsManager {
   constructor(user) {
@@ -46,6 +47,17 @@ class GroupsManager {
       });
     }));
   }
+
+  delete(groupID) {
+    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve) => {
+      Promise.all([
+        dbo.collection('groups').deleteMany({
+          '_id': ObjectId(groupID),
+        }),
+      ]).then(() => resolve());
+    }));
+  }
+
 }
 
 exports.createFromUser = function (user) {

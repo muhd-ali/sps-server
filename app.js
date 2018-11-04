@@ -8,6 +8,7 @@ const userRouter = require('./routes/user/handler');
 const filesRouter = require('./routes/files/handler');
 const commentsRouter = require('./routes/comments/handler');
 const groupsRouter = require('./routes/groups/handler');
+const testRouter = require('./routes/test/handler');
 
 const app = express();
 app.set('port', process.env.PORT || 4000);
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/test', testRouter);
 app.use('/user', userRouter);
 app.use('/files', filesRouter);
 app.use('/comments', commentsRouter);

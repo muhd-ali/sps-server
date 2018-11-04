@@ -63,6 +63,22 @@ class FileManager {
       });
   }
 
+  delete(fileID) {
+    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve) => {
+      Promise.all([
+        dbo.collection('fs.files').deleteMany({
+          '_id': ObjectId(fileID),
+        }),
+        dbo.collection('fs.chunks').deleteMany({
+          'files_id': ObjectId(fileID),
+        }),
+        dbo.collection('groups').update({}, {
+          '$pull': {'files': fileID},
+        })
+      ]).then(() => resolve());
+    }));
+  }
+
   getList() {
     return new Promise((resolve, reject) => {
       const gm = groupsManager.createFromUser(this.user);

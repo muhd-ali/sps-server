@@ -28,6 +28,21 @@ router.get('/download/id=:fileID/token=:token', (req, res) => {
     });
 });
 
+router.get('/delete/id=:fileID/token=:token', (req, res) => {
+  const token = req.params.token;
+  const fileID = req.params.fileID;
+  user.createFromToken(token)
+    .then(user => {
+      const fm = fileManager.createFromUser(user);
+      fm.delete(fileID).then(() => {
+        res.sendStatus(200);
+      });
+    })
+    .catch(() => {
+      res.sendStatus(401);
+    });
+});
+
 router.get('/all/token=:token', (req, res) => {
   const token = req.params.token;
   user.createFromToken(token)

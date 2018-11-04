@@ -53,6 +53,7 @@ class GroupsManager {
       Promise.all([
         dbo.collection('groups').deleteMany({
           '_id': ObjectId(groupID),
+          'owner': this.user.publicInfo.email_address,
         }),
       ]).then(() => resolve());
     }));

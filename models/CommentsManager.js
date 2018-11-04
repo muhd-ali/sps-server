@@ -7,8 +7,8 @@ class CommentsManager {
 
   getList() {
     return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
-      const files = dbo.collection('comments');
-      files.find({
+      const comments = dbo.collection('comments');
+      comments.find({
         'fileID': this.fileID,
       }).toArray((err, result) => {
         if (err) {
@@ -16,6 +16,24 @@ class CommentsManager {
           return;
         }
         resolve(result);
+      });
+    }));
+  }
+
+  add(text, user) {
+    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
+      const comments = dbo.collection('comments');
+      const comment = {
+        'fileID': this.fileID,
+        'user': {
+          'name': user.publicInfo.name,
+        },
+        'text': text,
+        'createDate': new Date(),
+      };
+      comments.insertOne(comment, (err, res) => {
+        if (err) throw err;
+        resolve();
       });
     }));
   }

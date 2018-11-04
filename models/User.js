@@ -60,7 +60,7 @@ class User {
     return dbManager.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
       const users = dbo.collection('users');
       users.updateOne({
-        'email_address': self.info.email_address,
+        'email_address': self.publicInfo.email_address,
       },
       {
         '$set': data,
@@ -102,8 +102,8 @@ class User {
   getList() {
     const email_address = this.publicInfo.email_address;
     return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
-      const files = dbo.collection('users');
-      files.find({
+      const users = dbo.collection('users');
+      users.find({
         '$and': [
           {'email_address': { '$ne': email_address }},
           {'email_address': { '$ne': '' }},

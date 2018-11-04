@@ -20,7 +20,7 @@ router.get('/all/token=:token', (req, res) => {
       user.getList()
         .then(list => {
           res.send(list);
-        })
+        });
     })
     .catch(err => {
       res.sendStatus(401);

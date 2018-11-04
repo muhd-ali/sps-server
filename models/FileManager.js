@@ -3,6 +3,8 @@ const GridFsStorage = require('multer-gridfs-storage');
 const multer = require('multer');
 const MongoGridFS = require('mongo-gridfs').MongoGridFS;
 const mongoose = require('mongoose');
+const groupsManager = require('./GroupsManager');
+const ObjectId = require('mongodb').ObjectID;
 
 class FileManager {
   constructor(user) {
@@ -62,19 +64,32 @@ class FileManager {
   }
 
   getList() {
-    const email_address = this.user.publicInfo.email_address;
-    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
-      const files = dbo.collection('fs.files');
-      files.find({
-        'metadata.owner': email_address,
-      }).toArray((err, result) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(result);
-      });
-    }));
+    return new Promise((resolve, reject) => {
+      const gm = groupsManager.createFromUser(this.user);
+      gm.getList()
+        .then(groups => {
+          const concat = (a, b) => a.concat(b);
+          const sharedFiles = groups.map(g => g.files.map(id => ObjectId(id))).reduce(concat,[]);
+          const email_address = this.user.publicInfo.email_address;
+          dbManager.connectToDBAndRun((dbo) => new Promise((resolve1, reject1) => {
+            const files = dbo.collection('fs.files');
+            files.find({
+              '$or': [
+                {'metadata.owner': email_address},
+                {'_id': {'$in': sharedFiles}},
+              ],
+            }).toArray((err, result) => {
+              if (err) {
+                reject1(err);
+                reject(err);
+                return;
+              }
+              resolve1(result);
+              resolve(result);
+            });
+          })).catch(err => reject(err));
+        });
+    });
   }
 }
 

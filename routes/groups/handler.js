@@ -12,12 +12,28 @@ router.post('/add/token=:token', (req, res) => {
       const data = req.body;
       const name = data.name;
       const users = data.users;
-      gm.add(name, users)
+      const files = data.files;
+      gm.add(name, users, files)
         .then(() => {
           res.sendStatus(201);
         });
     })
     .catch(() => {
+      res.sendStatus(401);
+    });
+});
+
+router.get('/all/token=:token', (req, res) => {
+  const token = req.params.token;
+  user.createFromToken(token)
+    .then(user => {
+      const gm = groupsManager.createFromUser(user);
+      gm.getList()
+        .then(list => {
+          res.send(list);
+        });
+    })
+    .catch(err => {
       res.sendStatus(401);
     });
 });

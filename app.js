@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const cors = require('cors');
 
 const userRouter = require('./routes/user/handler');
 const filesRouter = require('./routes/files/handler');
@@ -11,12 +12,28 @@ const groupsRouter = require('./routes/groups/handler');
 const testRouter = require('./routes/test/handler');
 
 const app = express();
-app.set('port', process.env.PORT || 4000);
+app.set('port', process.env.PORT || 8080);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
+// Set up a whitelist and check against it:
+const whitelist = ['http://localhost:3000', 'https://thawing-badlands-89809.herokuapp.com'];
+const corsOptions = {
+  'origin': function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+};
+
+// Then pass them to cors:
+app.use(cors(corsOptions));
+
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

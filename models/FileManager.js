@@ -72,6 +72,9 @@ class FileManager {
         dbo.collection('fs.chunks').deleteMany({
           'files_id': ObjectId(fileID),
         }),
+        dbo.collection('comments').deleteMany({
+          'fileID': fileID,
+        }),
         dbo.collection('groups').update({}, {
           '$pull': {'files': fileID},
         })

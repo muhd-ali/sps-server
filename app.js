@@ -18,8 +18,20 @@ app.set('port', process.env.PORT || 8080);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-// Set up a whitelist and check against it:
-const whitelist = ['http://localhost:3000', 'https://thawing-badlands-89809.herokuapp.com'];
+
+app.use(cors());
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/files', filesRouter);
+
+const whitelist = [
+  'http://localhost:3000',
+  'https://thawing-badlands-89809.herokuapp.com',
+];
 const corsOptions = {
   'origin': function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
@@ -29,22 +41,13 @@ const corsOptions = {
     }
   }
 };
-
-// Then pass them to cors:
 app.use(cors(corsOptions));
 
-app.use(cors());
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/test', testRouter);
 app.use('/user', userRouter);
-app.use('/files', filesRouter);
-app.use('/comments', commentsRouter);
 app.use('/groups', groupsRouter);
+app.use('/comments', commentsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -71,7 +71,7 @@ class User {
           reject(err);
         }
         self.createAndUseACL((acl) => new Promise((resolve1) => {
-          acl.addUserRoles(userData.email, 'admin', () => resolve1());
+          acl.addUserRoles(userData.email, 'standard', () => resolve1());
         })).then(() => {
           self.populateFrom(user, true)
             .then(() => resolve());

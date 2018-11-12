@@ -64,7 +64,7 @@ class FileManager {
   }
 
   delete(fileID) {
-    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve) => {
+    return dbManager.connectAndUseDBObject((dbo) => new Promise((resolve) => {
       Promise.all([
         dbo.collection('fs.files').deleteMany({
           '_id': ObjectId(fileID),
@@ -90,7 +90,7 @@ class FileManager {
           const concat = (a, b) => a.concat(b);
           const sharedFiles = groups.map(g => g.files.map(id => ObjectId(id))).reduce(concat,[]);
           const email_address = this.user.publicInfo.email_address;
-          dbManager.connectToDBAndRun((dbo) => new Promise((resolve1, reject1) => {
+          dbManager.connectAndUseDBObject((dbo) => new Promise((resolve1, reject1) => {
             const files = dbo.collection('fs.files');
             files.find({
               '$or': [

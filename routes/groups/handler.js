@@ -5,7 +5,6 @@ const groupsManager = require('../../models/GroupsManager');
 
 router.post('/add/token=:token', (req, res) => {
   const token = req.params.token;
-  console.log('here');
   user.createFromToken(token)
     .then(user => {
       const gm = groupsManager.createFromUser(user);
@@ -38,7 +37,23 @@ router.get('/all/token=:token', (req, res) => {
     });
 });
 
-router.get('/delete/id=:groupID/token=:token', (req, res) => {
+router.post('/update/token=:token', (req, res) => {
+  const token = req.params.token;
+  const data = req.body;
+  user.createFromToken(token)
+    .then(user => {
+      const gm = groupsManager.createFromUser(user);
+      gm.updateData(data.groupID, data.data)
+        .then(() => {
+          res.sendStatus(200);
+        });
+    })
+    .catch(err => {
+      res.sendStatus(401);
+    });
+});
+
+router.delete('/id=:groupID/token=:token', (req, res) => {
   const token = req.params.token;
   const groupID = req.params.groupID;
   user.createFromToken(token)

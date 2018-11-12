@@ -1,5 +1,6 @@
 const axios = require('axios');
 const dbManager = require('./DBManager').dbManager;
+const ACL = require('acl');
 
 const webAuth = {
   domain: 'https://venom-in-veins.auth0.com',
@@ -9,6 +10,19 @@ const webAuth = {
 class User {
   constructor(token) {
     this.token = token;
+  }
+
+  isAdmin() {
+    return this.publicInfo.roles.indexOf('admin') > -1;
+  }
+
+  createAndUseACL(useAcl) {
+    return dbManager.connectAndUseDBObject((dbo) => new Promise((resolve, reject) => {
+      const acl = new ACL(new ACL.mongodbBackend(dbo, 'acl_'));
+      useAcl(acl)
+        .then(response => resolve(response))
+        .catch(error => reject(error));
+    }));
   }
 
   authenticateUser() {
@@ -30,9 +44,19 @@ class User {
   }
 
   populateFrom(user, isNewUser) {
-    this.publicInfo = Object.assign({
-      'isNewUser': isNewUser,
-    }, user);
+    const self = this;
+    return this.createAndUseACL((acl) => new Promise((resolve, reject) => {
+      acl.userRoles(user.email_address, (err, roles) => {
+        if (err) {
+          reject(err);
+        }
+        self.publicInfo = Object.assign({
+          'isNewUser': isNewUser,
+          'roles': roles,
+        }, user);
+        resolve();
+      });
+    }));
   }
 
   populateNewUserFrom(userData, users) {
@@ -41,23 +65,28 @@ class User {
       const user = {
         'name': userData.name,
         'email_address': userData.email,
-        'permissions_type': 'standard',
       };
       users.insertOne(user, (err, res) => {
-        if (err) throw err;
-        self.populateFrom(user, true);
-        resolve();
+        if (err) {
+          reject(err);
+        }
+        self.createAndUseACL((acl) => new Promise((resolve1) => {
+          acl.addUserRoles(userData.email, 'standard', () => resolve1());
+        })).then(() => {
+          self.populateFrom(user, true)
+            .then(() => resolve());
+        });
       });
     });
   }
 
-  populateUserFrom(user) {
-    this.populateFrom(user, false);
+  populateOldUserFrom(user) {
+    return this.populateFrom(user, false);
   }
 
   updateData(data) {
     const self = this;
-    return dbManager.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
+    return dbManager.connectAndUseDBObject(dbo => new Promise((resolve, reject) => {
       const users = dbo.collection('users');
       users.updateOne({
         'email_address': self.publicInfo.email_address,
@@ -77,14 +106,13 @@ class User {
 
   createOrFetchUserFor(userData) {
     const self = this;
-    return dbManager.connectToDBAndRun(dbo => new Promise((resolve, reject) => {
+    return dbManager.connectAndUseDBObject(dbo => new Promise((resolve, reject) => {
       const users = dbo.collection('users');
       users.findOne({
         'email_address': userData.email,
       }, (err, result) => {
         if (err) {
           reject(err);
-          return;
         }
         if (result === null) {
           self.populateNewUserFrom(userData, users)
@@ -92,8 +120,9 @@ class User {
               resolve();
             });
         } else {
-          self.populateUserFrom(result);
-          resolve();
+          self.populateOldUserFrom(result)
+            .then(() => resolve())
+            .catch(err => reject(err));
         }
       });
     }));
@@ -101,7 +130,7 @@ class User {
 
   getList() {
     const email_address = this.publicInfo.email_address;
-    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
+    return dbManager.connectAndUseDBObject((dbo) => new Promise((resolve, reject) => {
       const users = dbo.collection('users');
       users.find({
         '$and': [
@@ -127,12 +156,15 @@ class User {
             .then(() => {
               resolve(self);
             })
-            .catch(() => {
+            .catch((err) => {
+              console.log(err)
               reject();
             });
         })
-        .catch(() => {
-          reject();
+        .catch((err) => {
+          console.log(err);
+
+          reject(err);
         });
     });
   }

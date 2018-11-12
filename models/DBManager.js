@@ -7,7 +7,7 @@ class DBManager {
     this.url = url;
   }
 
-  connectToDBAndRun(useDB) {
+  connectAndUseDBObject(useDB) {
     return new Promise((resolve, reject) => {
       MongoClient.connect(
         this.url,

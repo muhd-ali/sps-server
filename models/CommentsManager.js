@@ -6,7 +6,7 @@ class CommentsManager {
   }
 
   getList() {
-    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
+    return dbManager.connectAndUseDBObject((dbo) => new Promise((resolve, reject) => {
       const comments = dbo.collection('comments');
       comments.find({
         'fileID': this.fileID,
@@ -21,7 +21,7 @@ class CommentsManager {
   }
 
   add(text, user) {
-    return dbManager.connectToDBAndRun((dbo) => new Promise((resolve, reject) => {
+    return dbManager.connectAndUseDBObject((dbo) => new Promise((resolve, reject) => {
       const comments = dbo.collection('comments');
       const comment = {
         'fileID': this.fileID,
@@ -29,7 +29,7 @@ class CommentsManager {
           'name': user.publicInfo.name,
         },
         'text': text,
-        'createDate': new Date(), 
+        'createDate': new Date(),
       };
       comments.insertOne(comment, (err, res) => {
         if (err) throw err;

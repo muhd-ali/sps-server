@@ -28,7 +28,7 @@ router.get('/download/id=:fileID/token=:token', (req, res) => {
     });
 });
 
-router.get('/delete/id=:fileID/token=:token', (req, res) => {
+router.delete('/id=:fileID/token=:token', (req, res) => {
   const token = req.params.token;
   const fileID = req.params.fileID;
   user.createFromToken(token)

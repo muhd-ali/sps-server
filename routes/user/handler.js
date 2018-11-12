@@ -38,4 +38,20 @@ router.post('/update/token=:token', (req, res) => {
         });
     });
 });
+
+router.post('/perms/update/token=:token', (req, res) => {
+  const token = req.params.token;
+  const data = req.body;
+  user.createFromToken(token)
+    .then(user => {
+      if (!user.isAdmin()) {
+        res.sendStatus(401);
+        return;
+      }
+      user.updatePerms(data)
+        .then(() => {
+          res.sendStatus(200);
+        });
+    });
+});
 module.exports = router;

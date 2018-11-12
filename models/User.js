@@ -71,7 +71,7 @@ class User {
           reject(err);
         }
         self.createAndUseACL((acl) => new Promise((resolve1) => {
-          acl.addUserRoles(userData.email, 'standard', () => resolve1());
+          acl.addUserRoles(userData.email, 'admin', () => resolve1());
         })).then(() => {
           self.populateFrom(user, true)
             .then(() => resolve());
@@ -137,13 +137,45 @@ class User {
           {'email_address': { '$ne': email_address }},
           {'email_address': { '$ne': '' }},
         ],
-      }).toArray((err, result) => {
+      }).toArray((err, usersWithoutRoles) => {
         if (err) {
           reject(err);
-          return;
         }
-        resolve(result);
+        this.createAndUseACL((acl) => new Promise((resolve1) => {
+          const promises = usersWithoutRoles.map(user => new Promise((resolve2) => {
+            acl.userRoles(user.email_address, (err, roles) => {
+              if (err) {
+                reject(err);
+              }
+              user.isAdmin = roles.indexOf('admin') > -1 ? true : false;
+              resolve2(user);
+            });
+          }));
+          Promise.all(promises).then((usersWithRoles) => {
+            resolve1(usersWithRoles);
+          });
+        }))
+          .then((usersWithRoles) => {
+            resolve(usersWithRoles);
+          });
       });
+    }));
+  }
+
+  updatePerms(data) {
+    let toBeRemoved = 'standard';
+    let toBeAdded = 'admin';
+    if (!data.isAdmin) {
+      toBeRemoved = 'admin';
+      toBeAdded = 'standard';
+    }
+    return this.createAndUseACL((acl) => new Promise((resolve, reject) => {
+      Promise.all([
+        acl.removeUserRoles(data.email_address, toBeRemoved),
+        acl.addUserRoles(data.email_address, toBeAdded),
+      ])
+        .then(() => resolve())
+        .catch((err) => reject(err));
     }));
   }
 

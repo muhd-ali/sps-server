@@ -65,9 +65,15 @@ class FileManager {
 
   delete(fileID) {
     return dbManager.connectAndUseDBObject((dbo) => new Promise((resolve) => {
+      let query = {};
+      const email_address = this.user.publicInfo.email_address;
+      if (!this.user.isAdmin()) {
+        query = {'metadata.owner': email_address};
+      }
       Promise.all([
         dbo.collection('fs.files').deleteMany({
           '_id': ObjectId(fileID),
+          ...query
         }),
         dbo.collection('fs.chunks').deleteMany({
           'files_id': ObjectId(fileID),
@@ -92,12 +98,16 @@ class FileManager {
           const email_address = this.user.publicInfo.email_address;
           dbManager.connectAndUseDBObject((dbo) => new Promise((resolve1, reject1) => {
             const files = dbo.collection('fs.files');
-            files.find({
-              '$or': [
-                {'metadata.owner': email_address},
-                {'_id': {'$in': sharedFiles}},
-              ],
-            }).toArray((err, result) => {
+            let query = {};
+            if (!this.user.isAdmin()) {
+              query = {
+                '$or': [
+                  {'metadata.owner': email_address},
+                  {'_id': {'$in': sharedFiles}},
+                ],
+              };
+            }
+            files.find(query).toArray((err, result) => {
               if (err) {
                 reject1(err);
                 reject(err);
